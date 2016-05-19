@@ -34,6 +34,7 @@ The input is in tab delimited format of seven columns Including: locus_name, gen
  
 Here is example of input
 > chr14_901176_901185       	9 A 1 intron 10,9,9,9,9,9,9,9,9,9,9  	10,9,9,9,9,9,9,9
+
 > chr14_901492_901501       	9 A 1 intron 10,9,9,9,9,9,9,9,9,9     	10,10,8,9,9,9,9,9,9,9
 
 
