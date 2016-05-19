@@ -12,7 +12,7 @@ The scripts to perform full MLE and lumping MLE are designed to estimate RNA-DNA
  
 These algorithms will calculate the probability that the STR length profiles of all loci that share the same genotype were generated from specific set of RDD rate, RDD expansion probability, RT error rate, RT error expansion probability. Each set of these four parameters is chosen by L-BFGS-B algorithm from optim function in R. At the end of the process, the algorithm will report the optimal set of parameters that maximize the likelihood that the data were generated. The sequencing error rates from Fungtammasan et al. 2015 were used as constant rates of transition from cDNA to sequencing read.
  
-For the differences between full MLE and lumping MLE, please refer to our article ** Reverse Transcription Errors and RNA-DNA Differences at Short Tandem Repeats ** by Arkarachai Fungtammasan, Marta Tomaszkiewicz, Rebeca Campos-Sanchez, Kristin Eckert, Michael DeGiorgio, and Kateryna D. Makova.
+For the differences between full MLE and lumping MLE, please refer to our article **Reverse Transcription Errors and RNA-DNA Differences at Short Tandem Repeats** by Arkarachai Fungtammasan, Marta Tomaszkiewicz, Rebeca Campos-Sanchez, Kristin Eckert, Michael DeGiorgio, and Kateryna D. Makova.
  
  
 ## System requirement
