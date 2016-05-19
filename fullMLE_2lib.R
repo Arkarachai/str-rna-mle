@@ -1,11 +1,85 @@
+#!/usr/bin/env Rscript
+
 ######################################################
 ## estimate ML of RDD,RT error rates/expansion bias ##
 ######################################################
 
 
+#######################
+## argument handle  ###
+args<-commandArgs(TRUE)
+
+if(length(args) < 1) {
+  args <- c("--help")
+}
+if("--help" %in% args) {
+  cat("
+      The R Script to estimate rates and expansion/contraction of RNA-DNA difference and RT reverse transcriptase
+ 
+      Arguments:
+      --filename=string - input file name [MANDATORY]
+      --bin_size=integer [2] - number of cDNA and RNA molecule that will be used in Likelihood estimation [2-50]
+        Use larger integer for loci with high number of mapped RNA-seq read (high expression level).
+        Use bin_size = 2 for loci with 3-5 mapped RNA-seq reads
+        Use bin_size = 3 for loci with 4-7 mapped RNA-seq reads
+        Use bin_size = 5 for loci with 6-16 mapped RNA-seq reads
+        Use bin_size = 40 for loci with 49-102 mapped RNA-seq reads
+        The larger the bin size, the longer the running time
+      --N_core=integer [2]   - number of core for parallel processing among loci [2-12]
+      --lower_RDD_RT=float [1e-9] - upper limit of RDD and RT error rates
+      --upper_RDD_RT=float [0.5] - lower limit of RDD and RT error rates
+      --step_RDD_RT=float [0.00001] - step of change in MLE to infer RDD and RT error rates
+      --step_RDD_RT_expansion=float [0.01] - step of change in MLE to infer RDD and RT error expansion probabilities
+      --help                 - print this text
+
+      Example:
+      ./fullMLE_2lib.R --filename=inputfile.txt --bin_size=3 --N_core=4 > outputfile.txt \n\n")
+ 
+  q(save="no")
+}
+
+parseArgs <- function(x) strsplit(sub("^--", "", x), "=")
+argsDF <- as.data.frame(do.call("rbind", parseArgs(args)))
+argsL <- as.list(as.character(argsDF$V2))
+#argsL <- as.list(argsDF$V2)
+names(argsL) <- argsDF$V1
+ 
+if(is.null(argsL$filename)) {
+  print('input filename is missing')
+  q()
+} 
+if(is.null(argsL$bin_size)) {
+  argsL$bin_size=2
+}
+argsL$bin_size=as.integer(argsL$bin_size)
+if(is.null(argsL$N_core)) {
+  argsL$N_core=2
+}
+argsL$N_core=as.integer(argsL$N_core)
+if(is.null(argsL$lower_RDD_RT)) {
+  argsL$lower_RDD_RT=1e-9
+}
+argsL$lower_RDD_RT=as.numeric(argsL$lower_RDD_RT)
+if(is.null(argsL$upper_RDD_RT)) {
+  argsL$upper_RDD_RT=0.5
+}
+argsL$upper_RDD_RT=as.numeric(argsL$upper_RDD_RT)
+if(is.null(argsL$step_RDD_RT)) {
+  argsL$step_RDD_RT=0.00001
+}
+argsL$step_RDD_RT=as.numeric(argsL$step_RDD_RT)
+if(is.null(argsL$step_RDD_RT_expansion)) {
+  argsL$step_RDD_RT_expansion=0.01
+}
+argsL$step_RDD_RT_expansion=as.numeric(argsL$step_RDD_RT_expansion)
+
+####################
+## import library ##
+####################
+
 library(combinat)
 library(snow)
-args<-commandArgs(TRUE)
+ 
 #######################
 ## Special function  ##
 #######################
@@ -547,12 +621,12 @@ jointProbLoci<-function(locusdataset){
     
     Seq123list_value_collector=c()
     
-    for (C1_minus2 in 0:M_value){
-    for (C1_minus1 in 0:(M_value-C1_minus2)){
-    for (C1_equal in 0:(M_value-C1_minus2-C1_minus1)){
-    for (C1_plus1 in 0:(M_value-C1_minus2-C1_minus1-C1_equal)){
+    for (C1_minus2 in 0:bin_size){
+    for (C1_minus1 in 0:(bin_size-C1_minus2)){
+    for (C1_equal in 0:(bin_size-C1_minus2-C1_minus1)){
+    for (C1_plus1 in 0:(bin_size-C1_minus2-C1_minus1-C1_equal)){
         
-        C1_plus2=M_value-C1_minus2-C1_minus1-C1_equal-C1_plus1
+        C1_plus2=bin_size-C1_minus2-C1_minus1-C1_equal-C1_plus1
         C1_count=c(C1_minus2,C1_minus1,C1_equal,C1_plus1,C1_plus2)
 
         Seq123_value_collector=1
@@ -560,7 +634,7 @@ jointProbLoci<-function(locusdataset){
 
             Seq_CNA1_value_collector=c()
             for (Seqform in as.integer(names(allcount[[as.character(Seqrun)]]))){
-                Seq_CNA1_value_collector=c(Seq_CNA1_value_collector,sum(C1_count[1]*SeqErrorSwtich(motifSTR,fiveform[1],Seqform),C1_count[2]*SeqErrorSwtich(motifSTR,fiveform[2],Seqform),C1_count[3]*SeqErrorSwtich(motifSTR,fiveform[3],Seqform),C1_count[4]*SeqErrorSwtich(motifSTR,fiveform[4],Seqform),C1_count[5]*SeqErrorSwtich(motifSTR,fiveform[5],Seqform))/M_value)
+                Seq_CNA1_value_collector=c(Seq_CNA1_value_collector,sum(C1_count[1]*SeqErrorSwtich(motifSTR,fiveform[1],Seqform),C1_count[2]*SeqErrorSwtich(motifSTR,fiveform[2],Seqform),C1_count[3]*SeqErrorSwtich(motifSTR,fiveform[3],Seqform),C1_count[4]*SeqErrorSwtich(motifSTR,fiveform[4],Seqform),C1_count[5]*SeqErrorSwtich(motifSTR,fiveform[5],Seqform))/bin_size)
             }
             Seq123_value_collector=Seq123_value_collector*dmultinom(c(allcount[[as.character(Seqrun)]],0),prob=c(Seq_CNA1_value_collector,max(0,1-sum(Seq_CNA1_value_collector))))
         }
@@ -568,19 +642,19 @@ jointProbLoci<-function(locusdataset){
     }}}}
 
     Seq456list_value_collector=c()
-    for (C2_minus2 in 0:M_value){
-    for (C2_minus1 in 0:(M_value-C2_minus2)){
-    for (C2_equal in 0:(M_value-C2_minus2-C2_minus1)){
-    for (C2_plus1 in 0:(M_value-C2_minus2-C2_minus1-C2_equal)){
+    for (C2_minus2 in 0:bin_size){
+    for (C2_minus1 in 0:(bin_size-C2_minus2)){
+    for (C2_equal in 0:(bin_size-C2_minus2-C2_minus1)){
+    for (C2_plus1 in 0:(bin_size-C2_minus2-C2_minus1-C2_equal)){
         
-        C2_plus2=M_value-C2_minus2-C2_minus1-C2_equal-C2_plus1
+        C2_plus2=bin_size-C2_minus2-C2_minus1-C2_equal-C2_plus1
         C2_count=c(C2_minus2,C2_minus1,C2_equal,C2_plus1,C2_plus2)
    
         Seq456_value_collector=1
         for (Seqrun in 2:2){
             Seq_CNA2_value_collector=c()
             for (Seqform in as.integer(names(allcount[[as.character(Seqrun)]]))){
-                Seq_CNA2_value_collector=c(Seq_CNA2_value_collector,sum(C2_count[1]*SeqErrorSwtich(motifSTR,fiveform[1],Seqform),C2_count[2]*SeqErrorSwtich(motifSTR,fiveform[2],Seqform),C2_count[3]*SeqErrorSwtich(motifSTR,fiveform[3],Seqform),C2_count[4]*SeqErrorSwtich(motifSTR,fiveform[4],Seqform),C2_count[5]*SeqErrorSwtich(motifSTR,fiveform[5],Seqform))/M_value)
+                Seq_CNA2_value_collector=c(Seq_CNA2_value_collector,sum(C2_count[1]*SeqErrorSwtich(motifSTR,fiveform[1],Seqform),C2_count[2]*SeqErrorSwtich(motifSTR,fiveform[2],Seqform),C2_count[3]*SeqErrorSwtich(motifSTR,fiveform[3],Seqform),C2_count[4]*SeqErrorSwtich(motifSTR,fiveform[4],Seqform),C2_count[5]*SeqErrorSwtich(motifSTR,fiveform[5],Seqform))/bin_size)
             }
             Seq456_value_collector=Seq456_value_collector*dmultinom(c(allcount[[as.character(Seqrun)]],0),prob=c(Seq_CNA2_value_collector,max(0,1-sum(Seq_CNA2_value_collector))))            
         }
@@ -594,7 +668,7 @@ jointProbLoci<-function(locusdataset){
 
 ########################
 
-jointProbPDF <- function(Parameter_estimate,tempdataset){   #DNAform,motifSTR,run1,run2,run3,run4,run5,run6)
+jointProbPDF <- function(Parameter_estimate,tempdataset,bin_size,N_core){   #DNAform,motifSTR,run1,run2,run3,run4,run5,run6)
 
     ptm <- proc.time()
     ep1=Parameter_estimate[1]	
@@ -608,26 +682,26 @@ jointProbPDF <- function(Parameter_estimate,tempdataset){   #DNAform,motifSTR,ru
     threeform=c(DNAform-motifSTRclass,DNAform,DNAform+motifSTRclass)
     fiveform=c(DNAform-(2*motifSTRclass),DNAform-motifSTRclass,DNAform,DNAform+motifSTRclass,DNAform+(2*motifSTRclass))
 
-    M_value=3
-    pdimension=nsimplex(5,M_value)
+
+    pdimension=nsimplex(5,bin_size)
     Pmatrix=matrix(0,pdimension,pdimension)
-    for (R_minus1 in 0:M_value){
-    for (R_equal in 0:(M_value-R_minus1)){
-        R_plus1=M_value-R_minus1-R_equal
+    for (R_minus1 in 0:bin_size){
+    for (R_equal in 0:(bin_size-R_minus1)){
+        R_plus1=bin_size-R_minus1-R_equal
         r_count=c(R_minus1,R_equal,R_plus1) #r_count=vector of rna count by rna length        
         R_value_collector=dmultinom(r_count,prob=c(ProbErrorChoice(ep1,Q1,DNAform,threeform[1],motifSTRclass),ProbErrorChoice(ep1,Q1,DNAform,threeform[2],motifSTRclass),ProbErrorChoice(ep1,Q1,DNAform,threeform[3],motifSTRclass)))      
     
     C_value_collector=c()
-    for (C1_minus2 in 0:M_value){
-    for (C1_minus1 in 0:(M_value-C1_minus2)){
-    for (C1_equal in 0:(M_value-C1_minus2-C1_minus1)){
-    for (C1_plus1 in 0:(M_value-C1_minus2-C1_minus1-C1_equal)){
+    for (C1_minus2 in 0:bin_size){
+    for (C1_minus1 in 0:(bin_size-C1_minus2)){
+    for (C1_equal in 0:(bin_size-C1_minus2-C1_minus1)){
+    for (C1_plus1 in 0:(bin_size-C1_minus2-C1_minus1-C1_equal)){
         
-        C1_plus2=M_value-C1_minus2-C1_minus1-C1_equal-C1_plus1
+        C1_plus2=bin_size-C1_minus2-C1_minus1-C1_equal-C1_plus1
         C1_count=c(C1_minus2,C1_minus1,C1_equal,C1_plus1,C1_plus2)
         CNA1_R1_value_collector=c()
         for (C1 in fiveform){
-            CNA1_R1_value_collector=c(CNA1_R1_value_collector,sum(r_count[1]*ProbErrorChoice(ep2,Q2,threeform[1],C1,motifSTRclass),r_count[2]*ProbErrorChoice(ep2,Q2,threeform[2],C1,motifSTRclass),r_count[3]*ProbErrorChoice(ep2,Q2,threeform[3],C1,motifSTRclass))/M_value)
+            CNA1_R1_value_collector=c(CNA1_R1_value_collector,sum(r_count[1]*ProbErrorChoice(ep2,Q2,threeform[1],C1,motifSTRclass),r_count[2]*ProbErrorChoice(ep2,Q2,threeform[2],C1,motifSTRclass),r_count[3]*ProbErrorChoice(ep2,Q2,threeform[3],C1,motifSTRclass))/bin_size)
         }
 
         #CNA1_value_collector=dmultinom(c(C1_count,0),prob=c(CNA1_R1_value_collector,1-sum(CNA1_R1_value_collector)) )
@@ -642,11 +716,11 @@ jointProbPDF <- function(Parameter_estimate,tempdataset){   #DNAform,motifSTR,ru
     }}
     #print(Pmatrix)
     #locicombine=0.0
-    clus <- makeCluster(2,type="SOCK")
+    clus <- makeCluster(N_core,type="SOCK")
     clusterExport(clus,"jointProbLoci")
     clusterExport(clus,"SeqErrorSwtich")
-    clusterExport(clus,c("motifSTRclass","motifSTR","DNAform","Pmatrix","M_value","fiveform"),envir=environment())
-    #clusterExport(clus,"M_value")
+    clusterExport(clus,c("motifSTRclass","motifSTR","DNAform","Pmatrix","bin_size","fiveform"),envir=environment())
+    #clusterExport(clus,"bin_size")
     locicombinelist=parLapply(clus,tempdataset,jointProbLoci)
     #print(locicombinelist)
     locicombine=sum(unlist(locicombinelist))
@@ -668,8 +742,25 @@ jointProbPDF <- function(Parameter_estimate,tempdataset){   #DNAform,motifSTR,ru
 ## Data read in ##
 ##################
 
-filename=args[1]
-oridataset=read.table(filename,colClasses = "character")
+
+    
+print(c('filename','bin_size','N_core','lower_RDD_RT','upper_RDD_RT','step_RDD_RT','step_RDD_RT_expansion'))
+print('filename')
+print(argsL$filename)
+print('bin_size')
+print(argsL$bin_size)
+print('N_core')
+print(argsL$N_core)
+print('lower_RDD_RT')
+print(argsL$lower_RDD_RT)
+print('upper_RDD_RT')
+print(argsL$upper_RDD_RT)
+print('step_RDD_RT')
+print(argsL$step_RDD_RT)
+print('step_RDD_RT_expansion')
+print(argsL$step_RDD_RT_expansion)
+#filename=args[1]
+oridataset=read.table(argsL$filename,colClasses = "character")
 columnname=(c('locus','DNA','motif','class','functional','seq1','seq2'))
 colnames(oridataset)=columnname
 transformdataset=list()
@@ -688,8 +779,12 @@ for (line in 1:nrow(oridataset)){
     tempep2=10**runif(1,-9,-0.3)
     tempQ2=runif(1,0,1)
     initialparameter=c(tempep1,tempQ1,tempep2,tempQ2)
-    initialparameter=c(0.02,0.6,0.001,0.3)
     print(c("initialparameter",initialparameter))
-    optimresult=optim(initialparameter,jointProbPDF,NULL,method="L-BFGS-B",lower=c(1e-9,0,1e-9,0),upper=c(0.5,1,0.5,1),control=list(ndeps=c(0.00001,0.01,0.00001,0.01),fnscale=-1),tempdataset=transformdataset)
+    optimresult=optim(initialparameter,jointProbPDF,NULL,method="L-BFGS-B",
+    lower=c(argsL$lower_RDD_RT,0,argsL$lower_RDD_RT,0),
+    upper=c(argsL$upper_RDD_RT,1,argsL$upper_RDD_RT,1),
+    control=list(ndeps=c(argsL$step_RDD_RT,argsL$step_RDD_RT_expansion,argsL$step_RDD_RT,argsL$step_RDD_RT_expansion),
+    fnscale=-1),
+    tempdataset=transformdataset,bin_size=argsL$bin_size,N_core=argsL$N_core)
 
 print('done')
