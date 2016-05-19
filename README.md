@@ -1,4 +1,6 @@
-# *STR-RNA-MLE*, A program written in R that can compute the maximum likelihood estimate of the rates of RNA-DNA differences and reverse transcription errors (and associated expansion or contraction probabilities) from short tandem repeat profiles generated with RNA-seq.
+# *STR-RNA-MLE*
+
+A program written in R that can compute the maximum likelihood estimate of the rates of RNA-DNA differences and reverse transcription errors (and associated expansion or contraction probabilities) from short tandem repeat profiles generated with RNA-seq.
 
 
 ## Overview
