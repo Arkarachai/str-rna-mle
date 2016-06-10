@@ -31,6 +31,8 @@ To see the parameter option in help page, type `Rscript script_name` or `Rscript
  
 ## Data format
 The input is in tab delimited format of seven columns Including: locus_name, genotype, STR_motif, STR_class, functional_compoment, STR_length_profile_RNAseq_lib1, STR_length_profile_ RNAseq_lib2. The script only uses of genotype, STR_motif, STR_length profile_RNAseq _lib1, and STR_length_profile_ RNAseq _lib2; therefore, the rest of value can be random character or dot. Each file should contain only STR that have the same motif and homozygote genotype. Both genotype and STR length profile of RNA-seq are coded as numbers of base pair. The STR lengths in STR length profiles are not need to be sorted.
+
+STR slippage rate increase with repeat number and repeat length. Also, the slippage rates are different for different motifs. Therefore, the user should filter input to contain only one type of motif (column 3) and one length of STR in DNA (column 2)
  
 Here is example of input
 > chr14_901176_901185       	9 A 1 intron 10,9,9,9,9,9,9,9,9,9,9  	10,9,9,9,9,9,9,9
