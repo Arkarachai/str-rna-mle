@@ -1,0 +1,10 @@
+1)install snow and combinat
+	snow
+		https://cran.r-project.org/web/packages/snow/index.html
+		https://cran.r-project.org/web/packages/snow/snow.pdf
+	combinat
+		https://cran.r-project.org/web/packages/combinat/index.html
+		https://cran.r-project.org/web/packages/combinat/combinat.pdf
+2)download str.rna.mle
+3)launch R and install str.rna.mle
+	install.packages('PATH/to/str.rna.mle/folder', repos = NULL, type="source")
