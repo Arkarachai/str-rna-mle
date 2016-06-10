@@ -32,13 +32,15 @@ To see the parameter option in help page, type `Rscript script_name` or `Rscript
 ## Data format
 The input is in tab delimited format of seven columns Including: locus_name, genotype, STR_motif, STR_class, functional_compoment, STR_length_profile_RNAseq_lib1, STR_length_profile_ RNAseq_lib2. The script only uses of genotype, STR_motif, STR_length profile_RNAseq _lib1, and STR_length_profile_ RNAseq _lib2; therefore, the rest of value can be random character or dot. Each file should contain only STR that have the same motif and homozygote genotype. Both genotype and STR length profile of RNA-seq are coded as numbers of base pair. The STR lengths in STR length profiles are not need to be sorted.
 
-STR slippage rate increase with repeat number and repeat length. Also, the slippage rates are different for different motifs. Therefore, the user should filter input to contain only one type of motif (column 3) and one length of STR in DNA (column 2)
+STR slippage rates increase with repeat numbers and repeat lengths. Also, the slippage rates are different for different motifs. Therefore, the user should filter input to contain only one type of motif (column 3) and one length of STR in DNA (column 2)
  
 Here is example of input
 > chr14_901176_901185       	9 A 1 intron 10,9,9,9,9,9,9,9,9,9,9  	10,9,9,9,9,9,9,9
 
 > chr14_901492_901501       	9 A 1 intron 10,9,9,9,9,9,9,9,9,9     	10,10,8,9,9,9,9,9,9,9
 
+## R package option
+Since *STR-RNA-MLE* is computational intensive, it is designed to run on batch mode. This is especially useful to perform bootstrap. Therefore, we recommend the user to use our *fullMLE_2lib.R* and *lumpMLE_2lib.R*. However, we also provide R package option for those who want to use only the function and design the analysis pipeline in themselves. Select Rpackage_option and follow the instruction on installation.txt. 
 
 ## Citing *STR-RNA-MLE*
 Arkarachai Fungtammasan, Marta Tomaszkiewicz, Rebeca Campos-Sanchez, Kristin Eckert, Michael DeGiorgio, and Kateryna D. Makova,  Reverse Transcription Errors and RNA-DNA Differences at Short Tandem Repeats 
