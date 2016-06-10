@@ -1,15 +1,12 @@
 Package: str.rna.mle
 Type: Package
-Title: Likelihood calculation of RNA-DNA differences and Reverse 
-Transcription error rates/patterns from RNA-seq data
+Title: Likelihood calculation of RNA-DNA differences and Reverse Transcription error rates/patterns from RNA-seq data
 Version: 0.0.1
 Author: Arkarachai Fungtammasan
+Imports: snow,combinat
 Maintainer: Arkarachai Fungtammasan <arkarachai.af@gmail.com>
-Description: This is the prototype for future development of str-rna-mle 
-into suite of R package. For the current stage, it is more convenient to 
-use batch script available on https://github.com/Arkarachai/str-rna-mle
+Description: This is the prototype for future development of str-rna-mle into suite of R package. For the current stage, it is more convenient to use batch script available on https://github.com/Arkarachai/str-rna-mle
 License: This code is free to use.
 LazyData: TRUE
-Suggests: knitr,
-    rmarkdown
+Suggests: knitr
 VignetteBuilder: knitr
